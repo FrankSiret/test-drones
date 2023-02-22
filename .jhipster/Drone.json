@@ -1,0 +1,56 @@
+{
+  "applications": ["drones"],
+  "changelogDate": "20230222173133",
+  "dto": "mapstruct",
+  "embedded": false,
+  "entityTableName": "drone",
+  "fields": [
+    {
+      "fieldName": "serialNumber",
+      "fieldType": "String",
+      "fieldValidateRules": ["required", "maxlength", "unique", "pattern"],
+      "fieldValidateRulesMaxlength": "100",
+      "fieldValidateRulesPattern": "^\\d+$"
+    },
+    {
+      "fieldName": "model",
+      "fieldType": "Model",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "Lightweight,Middleweight,Cruiserweight,Heavyweight"
+    },
+    {
+      "fieldName": "weightLimit",
+      "fieldType": "Integer",
+      "fieldValidateRules": ["required", "min", "max"],
+      "fieldValidateRulesMax": "500",
+      "fieldValidateRulesMin": "0"
+    },
+    {
+      "fieldName": "batteryCapacity",
+      "fieldType": "Integer",
+      "fieldValidateRules": ["required", "min", "max"],
+      "fieldValidateRulesMax": "100",
+      "fieldValidateRulesMin": "0"
+    },
+    {
+      "fieldName": "state",
+      "fieldType": "State",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "IDLE,LOADING,LOADED,DELIVERING,DELIVERED,RETURNING"
+    }
+  ],
+  "fluentMethods": true,
+  "jpaMetamodelFiltering": true,
+  "name": "Drone",
+  "pagination": "pagination",
+  "readOnly": false,
+  "relationships": [
+    {
+      "otherEntityName": "medication",
+      "otherEntityRelationshipName": "drone",
+      "relationshipName": "medications",
+      "relationshipType": "one-to-many"
+    }
+  ],
+  "service": "serviceImpl"
+}
