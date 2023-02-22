@@ -1,0 +1,49 @@
+application {
+  config {
+    baseName drones
+    packageName com.franksiret.drones
+    languages [en]
+    skipClient true
+    skipUserManagement true
+  }
+  entities Drone, Medication
+  dto * with mapstruct
+  service * with serviceImpl
+  paginate * with pagination
+  filter *
+}
+
+entity Drone {
+  serialNumber String required maxlength(100) unique pattern(/^\d+$/)
+  model Model required
+  weightLimit Integer required min(0) max(500)
+  batteryCapacity Integer required min(0) max(100)
+  state State required
+}
+
+enum Model {
+  Lightweight,
+  Middleweight,
+  Cruiserweight,
+  Heavyweight
+}
+
+enum State {
+  IDLE,
+  LOADING,
+  LOADED,
+  DELIVERING,
+  DELIVERED,
+  RETURNING
+}
+
+entity Medication {
+  name String required pattern(/^[a-zA-Z0-9_-]+$/)
+  weight Integer required
+  code String required pattern(/^[A-Z0-9_]+$/)
+  image ImageBlob
+}
+
+relationship OneToMany {
+  Drone{medications} to Medication
+}
