@@ -56,7 +56,7 @@ public class Drone implements Serializable {
     @Column(name = "state", nullable = false)
     private State state;
 
-    @OneToMany(mappedBy = "drone")
+    @OneToMany(mappedBy = "drone", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     @JsonIgnoreProperties(value = { "drone" }, allowSetters = true)
     private Set<Medication> medications = new HashSet<>();
