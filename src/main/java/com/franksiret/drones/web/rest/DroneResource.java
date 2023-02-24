@@ -1,10 +1,15 @@
 package com.franksiret.drones.web.rest;
 
+import com.franksiret.drones.domain.Drone;
+import com.franksiret.drones.domain.Medication;
 import com.franksiret.drones.repository.DroneRepository;
 import com.franksiret.drones.service.DroneQueryService;
 import com.franksiret.drones.service.DroneService;
+import com.franksiret.drones.service.ToHeavyException;
 import com.franksiret.drones.service.criteria.DroneCriteria;
 import com.franksiret.drones.service.dto.DroneDTO;
+import com.franksiret.drones.service.dto.MedicationDTO;
+import com.franksiret.drones.service.mapper.MedicationMapper;
 import com.franksiret.drones.web.rest.errors.BadRequestAlertException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -46,10 +51,18 @@ public class DroneResource {
 
     private final DroneQueryService droneQueryService;
 
-    public DroneResource(DroneService droneService, DroneRepository droneRepository, DroneQueryService droneQueryService) {
+    private final MedicationMapper medicationMapper;
+
+    public DroneResource(
+        DroneService droneService,
+        DroneRepository droneRepository,
+        DroneQueryService droneQueryService,
+        MedicationMapper medicationMapper
+    ) {
         this.droneService = droneService;
         this.droneRepository = droneRepository;
         this.droneQueryService = droneQueryService;
+        this.medicationMapper = medicationMapper;
     }
 
     /**
@@ -199,5 +212,52 @@ public class DroneResource {
             .noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
             .build();
+    }
+
+    /**
+     * {@code PATCH  /drones/:id/bulk-load} : Loading a drone with a collections of medication items.
+     *
+     * @param id the id of the droneDTO to load medication items.
+     * @param medicationDTOs the list of medication items to load.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated droneDTO,
+     * or with status {@code 400 (Bad Request)} if the droneDTO is not valid,
+     * or with status {@code 500 (Internal Server Error)} if the droneDTO couldn't be updated.
+     * @throws URISyntaxException if the Location URI syntax is incorrect.
+     */
+    @PatchMapping("/drones/{id}/bulk-load")
+    public ResponseEntity<Drone> bulkLoadDrone(
+        @PathVariable(value = "id", required = false) final Long id,
+        @Valid @RequestBody List<MedicationDTO> medicationDTOs
+    ) throws URISyntaxException {
+        log.debug("REST request to load to a Drone medication items: {}, {}", id, medicationDTOs);
+        if (!droneRepository.existsById(id)) {
+            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
+        }
+        if (medicationDTOs.stream().anyMatch(m -> m.getId() != null)) {
+            throw new BadRequestAlertException("Any new load meditacion items cannot have an ID", ENTITY_NAME, "idmedicationexists");
+        }
+        Drone drone = droneRepository.findById(id).get();
+        if (!checkWeight(drone, medicationDTOs)) {
+            throw new ToHeavyException("The drone cannot be loaded with more weight that it can carry");
+        }
+        List<Medication> medications = medicationMapper.toEntity(medicationDTOs);
+        for (Medication medication : medications) {
+            drone.addMedications(medication);
+        }
+        Drone result = droneService.saveDroneMedications(drone);
+        return ResponseEntity
+            .ok()
+            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
+            .body(result);
+    }
+
+    private boolean checkWeight(Drone drone, List<MedicationDTO> medicationDTOs) {
+        if (drone.getMedications() == null) {
+            return true;
+        }
+        Integer weightLimit = drone.getWeightLimit();
+        Integer currentWeight = drone.getMedications().stream().mapToInt(Medication::getWeight).sum();
+        Integer weightToLoad = medicationDTOs.stream().mapToInt(MedicationDTO::getWeight).sum();
+        return currentWeight + weightToLoad <= weightLimit;
     }
 }

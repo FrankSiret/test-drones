@@ -81,4 +81,10 @@ public class DroneServiceImpl implements DroneService {
         log.debug("Request to delete Drone : {}", id);
         droneRepository.deleteById(id);
     }
+
+    @Override
+    public Drone saveDroneMedications(Drone drone) {
+        log.debug("Request to save all Drone's medication items : {}", drone);
+        return droneRepository.save(drone);
+    }
 }

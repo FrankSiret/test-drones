@@ -1,5 +1,6 @@
 package com.franksiret.drones.service;
 
+import com.franksiret.drones.domain.Drone;
 import com.franksiret.drones.service.dto.DroneDTO;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -55,4 +56,6 @@ public interface DroneService {
      * @param id the id of the entity.
      */
     void delete(Long id);
+
+    Drone saveDroneMedications(Drone drone);
 }
