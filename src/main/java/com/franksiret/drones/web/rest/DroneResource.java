@@ -233,8 +233,8 @@ public class DroneResource {
         if (!droneRepository.existsById(id)) {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
-        if (medicationDTOs.stream().anyMatch(m -> m.getId() != null)) {
-            throw new BadRequestAlertException("Any new load meditacion items cannot have an ID", ENTITY_NAME, "idmedicationexists");
+        for (MedicationDTO medicationDTO : medicationDTOs) {
+            validMedication(medicationDTO);
         }
         Drone drone = droneRepository.findById(id).get();
         if (!checkWeight(drone, medicationDTOs)) {
@@ -259,5 +259,33 @@ public class DroneResource {
         Integer currentWeight = drone.getMedications().stream().mapToInt(Medication::getWeight).sum();
         Integer weightToLoad = medicationDTOs.stream().mapToInt(MedicationDTO::getWeight).sum();
         return currentWeight + weightToLoad <= weightLimit;
+    }
+
+    private boolean validMedication(MedicationDTO medicationDTO) {
+        if (medicationDTO.getId() != null) {
+            throw new BadRequestAlertException("New Medication item cannot have an ID", ENTITY_NAME, "idmedicationexists");
+        }
+        if ((medicationDTO.getImageContentType() != null) ^ (medicationDTO.getImage() != null)) {
+            throw new BadRequestAlertException(
+                "Medication item should have either both (image and imageContentType) or neither",
+                ENTITY_NAME,
+                "imagemedicationerror"
+            );
+        }
+        if (medicationDTO.getImageContentType() != null && !medicationDTO.getImageContentType().startsWith("image/")) {
+            throw new BadRequestAlertException(
+                "Invalid imageContentType in the Medication item, only image/* type are available",
+                ENTITY_NAME,
+                "imagemedicationerror"
+            );
+        }
+        if (medicationDTO.getImage() != null && medicationDTO.getImage().length > 1024 * 1024) {
+            throw new BadRequestAlertException(
+                "Image is too large in the Medication item, should have at most 1MB",
+                ENTITY_NAME,
+                "imagemedicationerror"
+            );
+        }
+        return true;
     }
 }
