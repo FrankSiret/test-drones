@@ -18,6 +18,7 @@ public class MedicationDTO implements Serializable {
     private String name;
 
     @NotNull
+    @Min(value = 1)
     private Integer weight;
 
     @NotNull
@@ -28,6 +29,7 @@ public class MedicationDTO implements Serializable {
     private byte[] image;
 
     private String imageContentType;
+
     private DroneDTO drone;
 
     public Long getId() {
