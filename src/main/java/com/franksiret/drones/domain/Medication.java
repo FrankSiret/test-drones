@@ -30,6 +30,7 @@ public class Medication implements Serializable {
     private String name;
 
     @NotNull
+    @Min(value = 1)
     @Column(name = "weight", nullable = false)
     private Integer weight;
 
