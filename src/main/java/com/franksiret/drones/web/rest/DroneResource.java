@@ -14,6 +14,7 @@ import com.franksiret.drones.service.dto.MedicationDTO;
 import com.franksiret.drones.service.mapper.DroneMapper;
 import com.franksiret.drones.service.mapper.MedicationMapper;
 import com.franksiret.drones.web.rest.errors.BadRequestAlertException;
+import com.franksiret.drones.web.rest.vm.DroneBatteryVM;
 import com.franksiret.drones.web.rest.vm.MedicationFormVM;
 import java.io.IOException;
 import java.net.URI;
@@ -387,5 +388,22 @@ public class DroneResource {
             result = droneQueryService.findByCriteria(criteria);
         }
         return ResponseEntity.ok().body(result);
+    }
+
+    /**
+     * {@code GET  /drones/:id/battery} : get drone battery level for a given drone "id".
+     *
+     * @param id the id of the drone.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the droneDTO, or with status {@code 404 (Not Found)}.
+     */
+    @GetMapping("/drones/{id}/battery")
+    public ResponseEntity<DroneBatteryVM> getDroneBattery(@PathVariable Long id) {
+        log.debug("REST request to get Drone battery level : {}", id);
+        Drone drone = droneRepository
+            .findById(id)
+            .orElseThrow(() -> new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound"));
+        DroneBatteryVM droneBatteryVM = new DroneBatteryVM();
+        droneBatteryVM.setBatteryLevel(drone.getBatteryCapacity());
+        return ResponseEntity.ok().body(droneBatteryVM);
     }
 }
