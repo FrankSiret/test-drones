@@ -238,7 +238,7 @@ public class DroneResource {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
         for (MedicationDTO medicationDTO : medicationDTOs) {
-            validMedication(medicationDTO);
+            validateMedicationOrThrow(medicationDTO);
         }
         Drone drone = droneRepository.findById(id).get();
         if (!checkWeight(drone, medicationDTOs)) {
@@ -285,7 +285,7 @@ public class DroneResource {
             medicationDTO.setImage(image.getBytes());
             medicationDTO.setImageContentType(image.getContentType());
         }
-        validMedication(medicationDTO);
+        validateMedicationOrThrow(medicationDTO);
         if (!checkWeight(drone, List.of(medicationDTO))) {
             throw new ToHeavyException("The drone cannot be loaded with more weight that it can carry");
         }
@@ -308,7 +308,7 @@ public class DroneResource {
         return currentWeight + weightToLoad <= weightLimit;
     }
 
-    private boolean validMedication(MedicationDTO medicationDTO) {
+    private boolean validateMedicationOrThrow(MedicationDTO medicationDTO) {
         if (medicationDTO.getId() != null) {
             throw new BadRequestAlertException("New Medication item cannot have an ID", ENTITY_NAME, "idmedicationexists");
         }
