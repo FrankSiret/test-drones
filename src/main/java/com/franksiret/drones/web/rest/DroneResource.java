@@ -270,7 +270,7 @@ public class DroneResource {
     public ResponseEntity<Drone> loadDrone(
         @PathVariable(value = "id", required = false) final Long id,
         @RequestPart("medication") @Valid MedicationFormVM medicationFormVM,
-        @RequestPart("image") MultipartFile image
+        @RequestPart(value = "image", required = false) MultipartFile image
     ) throws URISyntaxException, IOException {
         log.debug("REST request to load to a Drone one medication item: {}, {}", id, medicationFormVM);
         if (!droneRepository.existsById(id)) {
