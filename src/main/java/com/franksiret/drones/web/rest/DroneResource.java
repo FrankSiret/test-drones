@@ -11,6 +11,8 @@ import com.franksiret.drones.service.dto.DroneDTO;
 import com.franksiret.drones.service.dto.MedicationDTO;
 import com.franksiret.drones.service.mapper.MedicationMapper;
 import com.franksiret.drones.web.rest.errors.BadRequestAlertException;
+import com.franksiret.drones.web.rest.vm.MedicationFormVM;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -24,8 +26,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import tech.jhipster.web.util.HeaderUtil;
 import tech.jhipster.web.util.PaginationUtil;
@@ -244,6 +248,49 @@ public class DroneResource {
         for (Medication medication : medications) {
             drone.addMedications(medication);
         }
+        Drone result = droneService.saveDroneMedications(drone);
+        return ResponseEntity
+            .ok()
+            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
+            .body(result);
+    }
+
+    /**
+     * {@code PATCH  /drones/:id/load} : Loading a drone with a medication item.
+     *
+     * @param id the id of the droneDTO to load medication items.
+     * @param medicationDTO the list of medication items to load.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated droneDTO,
+     * or with status {@code 400 (Bad Request)} if the droneDTO is not valid,
+     * or with status {@code 500 (Internal Server Error)} if the droneDTO couldn't be updated.
+     * @throws URISyntaxException if the Location URI syntax is incorrect.
+     * @throws IOException
+     */
+    @PatchMapping(path = "/drones/{id}/load", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+    public ResponseEntity<Drone> loadDrone(
+        @PathVariable(value = "id", required = false) final Long id,
+        @RequestPart("medication") @Valid MedicationFormVM medicationFormVM,
+        @RequestPart("image") MultipartFile image
+    ) throws URISyntaxException, IOException {
+        log.debug("REST request to load to a Drone one medication item: {}, {}", id, medicationFormVM);
+        if (!droneRepository.existsById(id)) {
+            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
+        }
+        if (medicationFormVM.getId() != null) {
+            throw new BadRequestAlertException("A new load medication item cannot have an ID", ENTITY_NAME, "idmedicationexists");
+        }
+        Drone drone = droneRepository.findById(id).get();
+        MedicationDTO medicationDTO = medicationMapper.toDto(medicationFormVM);
+        if (image != null && !image.isEmpty()) {
+            medicationDTO.setImage(image.getBytes());
+            medicationDTO.setImageContentType(image.getContentType());
+        }
+        validMedication(medicationDTO);
+        if (!checkWeight(drone, List.of(medicationDTO))) {
+            throw new ToHeavyException("The drone cannot be loaded with more weight that it can carry");
+        }
+        Medication medication = medicationMapper.toEntity(medicationDTO);
+        drone.addMedications(medication);
         Drone result = droneService.saveDroneMedications(drone);
         return ResponseEntity
             .ok()
