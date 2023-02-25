@@ -15,6 +15,7 @@ import com.franksiret.drones.service.mapper.DroneMapper;
 import com.franksiret.drones.service.mapper.MedicationMapper;
 import com.franksiret.drones.web.rest.errors.BadRequestAlertException;
 import com.franksiret.drones.web.rest.vm.DroneBatteryVM;
+import com.franksiret.drones.web.rest.vm.DroneVM;
 import com.franksiret.drones.web.rest.vm.MedicationFormVM;
 import java.io.IOException;
 import java.net.URI;
@@ -84,17 +85,16 @@ public class DroneResource {
 
     /**
      * {@code POST  /drones} : Create a new drone.
+     * All new Drone are created in IDLE state
      *
-     * @param droneDTO the droneDTO to create.
+     * @param droneVM the drone to create.
      * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with body the new droneDTO, or with status {@code 400 (Bad Request)} if the drone has already an ID.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("/drones")
-    public ResponseEntity<DroneDTO> createDrone(@Valid @RequestBody DroneDTO droneDTO) throws URISyntaxException {
-        log.debug("REST request to save Drone : {}", droneDTO);
-        if (droneDTO.getId() != null) {
-            throw new BadRequestAlertException("A new drone cannot already have an ID", ENTITY_NAME, "idexists");
-        }
+    public ResponseEntity<DroneDTO> createDrone(@Valid @RequestBody DroneVM droneVM) throws URISyntaxException {
+        log.debug("REST request to save Drone : {}", droneVM);
+        DroneDTO droneDTO = droneMapper.toDto(droneVM);
         DroneDTO result = droneService.save(droneDTO);
         return ResponseEntity
             .created(new URI("/api/drones/" + result.getId()))
