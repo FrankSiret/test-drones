@@ -3,6 +3,7 @@ package com.franksiret.drones.web.rest;
 import com.franksiret.drones.domain.Drone;
 import com.franksiret.drones.domain.Medication;
 import com.franksiret.drones.repository.DroneRepository;
+import com.franksiret.drones.repository.MedicationRepository;
 import com.franksiret.drones.service.DroneQueryService;
 import com.franksiret.drones.service.DroneService;
 import com.franksiret.drones.service.ToHeavyException;
@@ -57,16 +58,20 @@ public class DroneResource {
 
     private final MedicationMapper medicationMapper;
 
+    private final MedicationRepository medicationRepository;
+
     public DroneResource(
         DroneService droneService,
         DroneRepository droneRepository,
         DroneQueryService droneQueryService,
-        MedicationMapper medicationMapper
+        MedicationMapper medicationMapper,
+        MedicationRepository medicationRepository
     ) {
         this.droneService = droneService;
         this.droneRepository = droneRepository;
         this.droneQueryService = droneQueryService;
         this.medicationMapper = medicationMapper;
+        this.medicationRepository = medicationRepository;
     }
 
     /**
@@ -334,5 +339,22 @@ public class DroneResource {
             );
         }
         return true;
+    }
+
+    /**
+     * {@code GET  /drones/:id/medications} : get all load of the "id" drone.
+     *
+     * @param id the id of the droneDTO to retrieve its loads.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the droneDTO, or with status {@code 404 (Not Found)}.
+     */
+    @GetMapping("/drones/{id}/medications")
+    public ResponseEntity<List<MedicationDTO>> getDroneLoad(@PathVariable Long id) {
+        log.debug("REST request to get all Drone loaded medication items : {}", id);
+        if (!droneRepository.existsById(id)) {
+            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
+        }
+        List<Medication> medications = medicationRepository.findAllByDroneId(id);
+        List<MedicationDTO> medicationDTOs = medicationMapper.toDto(medications);
+        return ResponseEntity.ok().body(medicationDTOs);
     }
 }
