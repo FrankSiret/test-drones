@@ -2,6 +2,7 @@ package com.franksiret.drones.web.rest;
 
 import com.franksiret.drones.domain.Drone;
 import com.franksiret.drones.domain.Medication;
+import com.franksiret.drones.domain.enumeration.State;
 import com.franksiret.drones.repository.DroneRepository;
 import com.franksiret.drones.repository.MedicationRepository;
 import com.franksiret.drones.service.DroneQueryService;
@@ -10,12 +11,14 @@ import com.franksiret.drones.service.ToHeavyException;
 import com.franksiret.drones.service.criteria.DroneCriteria;
 import com.franksiret.drones.service.dto.DroneDTO;
 import com.franksiret.drones.service.dto.MedicationDTO;
+import com.franksiret.drones.service.mapper.DroneMapper;
 import com.franksiret.drones.service.mapper.MedicationMapper;
 import com.franksiret.drones.web.rest.errors.BadRequestAlertException;
 import com.franksiret.drones.web.rest.vm.MedicationFormVM;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -60,18 +63,22 @@ public class DroneResource {
 
     private final MedicationRepository medicationRepository;
 
+    private final DroneMapper droneMapper;
+
     public DroneResource(
         DroneService droneService,
         DroneRepository droneRepository,
         DroneQueryService droneQueryService,
         MedicationMapper medicationMapper,
-        MedicationRepository medicationRepository
+        MedicationRepository medicationRepository,
+        DroneMapper droneMapper
     ) {
         this.droneService = droneService;
         this.droneRepository = droneRepository;
         this.droneQueryService = droneQueryService;
         this.medicationMapper = medicationMapper;
         this.medicationRepository = medicationRepository;
+        this.droneMapper = droneMapper;
     }
 
     /**
@@ -356,5 +363,29 @@ public class DroneResource {
         List<Medication> medications = medicationRepository.findAllByDroneId(id);
         List<MedicationDTO> medicationDTOs = medicationMapper.toDto(medications);
         return ResponseEntity.ok().body(medicationDTOs);
+    }
+
+    /**
+     * {@code GET  /drones/available} : get all available drones for loading.
+     *
+     * @param weight the weight that a drone might loaded, can be null.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the droneDTO, or with status {@code 404 (Not Found)}.
+     */
+    @GetMapping("/drones/available")
+    public ResponseEntity<List<DroneDTO>> getAvailableDrone(@RequestParam(required = false) Long weight) {
+        log.debug("REST request to get all Drone available for loading this weight: {}", weight);
+        Integer battery = 25;
+        List<State> state = List.of(State.IDLE, State.LOADING, State.LOADED, State.DELIVERED);
+        List<DroneDTO> result = new ArrayList<>();
+        // if weight is specified do a native query
+        if (weight != null && weight > 0) {
+            result = droneMapper.toDto(droneRepository.findAllAvailableDroneByWeight(weight, battery, state));
+        } else {
+            DroneCriteria criteria = new DroneCriteria();
+            criteria.batteryCapacity().setGreaterThanOrEqual(battery);
+            criteria.state().setIn(state);
+            result = droneQueryService.findByCriteria(criteria);
+        }
+        return ResponseEntity.ok().body(result);
     }
 }
