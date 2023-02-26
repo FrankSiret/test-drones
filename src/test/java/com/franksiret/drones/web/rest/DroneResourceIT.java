@@ -11,9 +11,13 @@ import com.franksiret.drones.domain.Medication;
 import com.franksiret.drones.domain.enumeration.Model;
 import com.franksiret.drones.domain.enumeration.State;
 import com.franksiret.drones.repository.DroneRepository;
+import com.franksiret.drones.repository.MedicationRepository;
+import com.franksiret.drones.service.dto.MedicationDTO;
 import com.franksiret.drones.service.mapper.DroneMapper;
+import com.franksiret.drones.service.mapper.MedicationMapper;
 import com.franksiret.drones.web.rest.vm.DroneUpdateVM;
 import com.franksiret.drones.web.rest.vm.DroneVM;
+import com.franksiret.drones.web.rest.vm.MedicationFormVM;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
@@ -22,7 +26,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,6 +60,11 @@ class DroneResourceIT {
     private static final String ENTITY_API_URL = "/api/drones";
     private static final String ENTITY_API_URL_ID = ENTITY_API_URL + "/{id}";
 
+    private static final String ENTITY_API_URL_ID_LOAD = ENTITY_API_URL_ID + "/load";
+    private static final String ENTITY_API_URL_ID_BULK_LOAD = ENTITY_API_URL_ID + "/bulk-load";
+    private static final String ENTITY_API_URL_ID_MEDICATION = ENTITY_API_URL_ID + "/medications";
+    private static final String ENTITY_API_URL_AVAILABLE = ENTITY_API_URL + "/available";
+    private static final String ENTITY_API_URL_ID_BATTERY = ENTITY_API_URL_ID + "/battery";
     private static Random random = new Random();
     private static AtomicLong count = new AtomicLong(random.nextInt() + (2 * Integer.MAX_VALUE));
 
@@ -62,6 +73,12 @@ class DroneResourceIT {
 
     @Autowired
     private DroneMapper droneMapper;
+
+    @Autowired
+    private MedicationMapper medicationMapper;
+
+    @Autowired
+    private MedicationRepository medicationRepository;
 
     @Autowired
     private EntityManager em;
@@ -550,5 +567,204 @@ class DroneResourceIT {
         // Validate the database contains one less item
         List<Drone> droneList = droneRepository.findAll();
         assertThat(droneList).hasSize(databaseSizeBeforeDelete - 1);
+    }
+
+    @Test
+    @Transactional
+    void loadingDroneWithMedicationItemsMissingImageSingleLoadOK() throws Exception {
+        // Initialize the database
+        droneRepository.saveAndFlush(drone);
+
+        int databaseSizeBeforePost = medicationRepository.findAll().size();
+
+        Medication medication = MedicationResourceUtil.createEntity(em);
+        MedicationFormVM medicationFormVM = MedicationResourceUtil.medicationToFormVM(medication);
+        medicationFormVM.setId(null);
+
+        MockMultipartFile medicationJson = new MockMultipartFile(
+            "medication",
+            "",
+            MediaType.APPLICATION_JSON_VALUE,
+            TestUtil.convertObjectToJsonBytes(medicationFormVM)
+        );
+
+        // Load medication
+        restDroneMockMvc
+            .perform(multipart(ENTITY_API_URL_ID_LOAD, drone.getId()).file(medicationJson).accept(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(status().isCreated());
+
+        // Validate the database contains
+        List<Medication> medicationList = medicationRepository.findAll();
+        assertThat(medicationList).hasSize(databaseSizeBeforePost + 1);
+        Medication testMedication = medicationList.get(medicationList.size() - 1);
+        assertThat(testMedication.getCode()).isEqualTo(MedicationResourceUtil.DEFAULT_CODE);
+        assertThat(testMedication.getName()).isEqualTo(MedicationResourceUtil.DEFAULT_NAME);
+        assertThat(testMedication.getWeight()).isEqualTo(MedicationResourceUtil.DEFAULT_WEIGHT);
+        assertThat(testMedication.getImage()).isNull();
+        assertThat(testMedication.getImageContentType()).isNull();
+        assertThat(testMedication.getDrone().getId()).isEqualTo(drone.getId());
+    }
+
+    @Test
+    @Transactional
+    void loadingDroneWithMedicationItemsMissingMedicationSingleLoadBadRequest() throws Exception {
+        // Initialize the database
+        droneRepository.saveAndFlush(drone);
+
+        int databaseSizeBeforePost = medicationRepository.findAll().size();
+
+        MockMultipartFile imagePng = new MockMultipartFile("image", "image.png", MediaType.IMAGE_PNG_VALUE, "imagePNG".getBytes());
+
+        // Load medication
+        restDroneMockMvc
+            .perform(multipart(ENTITY_API_URL_ID_LOAD, drone.getId()).file(imagePng).accept(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(status().isBadRequest());
+
+        // Validate the database contains
+        List<Medication> medicationList = medicationRepository.findAll();
+        assertThat(medicationList).hasSize(databaseSizeBeforePost);
+    }
+
+    @Test
+    @Transactional
+    void loadedDroneMoreWeightThatItCanCarrySingleLoadBadRequest() throws Exception {
+        // Initialize the database
+        droneRepository.saveAndFlush(drone);
+
+        int databaseSizeBeforePost = medicationRepository.findAll().size();
+
+        Medication medication = MedicationResourceUtil.createEntity(em);
+        MedicationFormVM medicationFormVM = MedicationResourceUtil.medicationToFormVM(medication);
+        medicationFormVM.setId(null);
+        medicationFormVM.setWeight(1000);
+
+        MockMultipartFile medicationJson = new MockMultipartFile(
+            "medication",
+            "",
+            MediaType.APPLICATION_JSON_VALUE,
+            TestUtil.convertObjectToJsonBytes(medicationFormVM)
+        );
+
+        // Load medication
+        restDroneMockMvc
+            .perform(multipart(ENTITY_API_URL_ID_LOAD, drone.getId()).file(medicationJson).accept(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(status().is(500));
+
+        // Validate the database contains
+        List<Medication> medicationList = medicationRepository.findAll();
+        assertThat(medicationList).hasSize(databaseSizeBeforePost);
+    }
+
+    @Test
+    @Transactional
+    void loadingDroneWithMedicationItemsSingleLoadOK() throws Exception {
+        // Initialize the database
+        droneRepository.saveAndFlush(drone);
+
+        int databaseSizeBeforePost = medicationRepository.findAll().size();
+
+        MockMultipartFile imagePng = new MockMultipartFile("image", "image.png", MediaType.IMAGE_PNG_VALUE, "imagePNG".getBytes());
+
+        Medication medication = MedicationResourceUtil.createEntity(em);
+        MedicationFormVM medicationFormVM = MedicationResourceUtil.medicationToFormVM(medication);
+        medicationFormVM.setId(null);
+
+        MockMultipartFile medicationJson = new MockMultipartFile(
+            "medication",
+            "",
+            MediaType.APPLICATION_JSON_VALUE,
+            TestUtil.convertObjectToJsonBytes(medicationFormVM)
+        );
+
+        // Load medication
+        restDroneMockMvc
+            .perform(
+                multipart(ENTITY_API_URL_ID_LOAD, drone.getId())
+                    .file(imagePng)
+                    .file(medicationJson)
+                    .accept(MediaType.APPLICATION_JSON_VALUE)
+            )
+            .andExpect(status().isCreated());
+
+        // Validate the database contains
+        List<Medication> medicationList = medicationRepository.findAll();
+        assertThat(medicationList).hasSize(databaseSizeBeforePost + 1);
+        Medication testMedication = medicationList.get(medicationList.size() - 1);
+        assertThat(testMedication.getCode()).isEqualTo(MedicationResourceUtil.DEFAULT_CODE);
+        assertThat(testMedication.getName()).isEqualTo(MedicationResourceUtil.DEFAULT_NAME);
+        assertThat(testMedication.getWeight()).isEqualTo(MedicationResourceUtil.DEFAULT_WEIGHT);
+        assertThat(testMedication.getImage()).isNotNull();
+        assertThat(testMedication.getImageContentType()).isEqualTo(MediaType.IMAGE_PNG_VALUE);
+        assertThat(testMedication.getDrone().getId()).isEqualTo(drone.getId());
+    }
+
+    @Test
+    @Transactional
+    void loadedDroneMoreWeightThatItCanCarryBulkLoadBadRequest() throws Exception {
+        // Initialize the database
+        droneRepository.saveAndFlush(drone);
+
+        int databaseSizeBeforePost = medicationRepository.findAll().size();
+
+        Medication medication = MedicationResourceUtil.createEntity(em);
+        MedicationDTO medicationDTO1 = medicationMapper.toDto(medication);
+        medicationDTO1.setId(null);
+        MedicationDTO medicationDTO2 = medicationMapper.toDto(medication);
+        medicationDTO2.setId(null);
+        medicationDTO2.setWeight(1000);
+
+        List<MedicationDTO> medicationDTOs = List.of(medicationDTO1, medicationDTO2);
+
+        // Load medication
+        restDroneMockMvc
+            .perform(
+                post(ENTITY_API_URL_ID_BULK_LOAD, drone.getId())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(medicationDTOs))
+                    .accept(MediaType.APPLICATION_JSON_VALUE)
+            )
+            .andExpect(status().is(500));
+
+        // Validate the database contains
+        List<Medication> medicationList = medicationRepository.findAll();
+        assertThat(medicationList).hasSize(databaseSizeBeforePost);
+    }
+
+    @Test
+    @Transactional
+    void loadingDroneWithMedicationItemsBulkLoadOK() throws Exception {
+        // Initialize the database
+        droneRepository.saveAndFlush(drone);
+
+        int databaseSizeBeforePost = medicationRepository.findAll().size();
+
+        Medication medication = MedicationResourceUtil.createEntity(em);
+        MedicationDTO medicationDTO1 = medicationMapper.toDto(medication);
+        medicationDTO1.setId(null);
+        MedicationDTO medicationDTO2 = medicationMapper.toDto(medication);
+        medicationDTO2.setId(null);
+
+        List<MedicationDTO> medicationDTOs = List.of(medicationDTO1, medicationDTO2);
+
+        // Load medication
+        restDroneMockMvc
+            .perform(
+                post(ENTITY_API_URL_ID_BULK_LOAD, drone.getId())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(medicationDTOs))
+                    .accept(MediaType.APPLICATION_JSON_VALUE)
+            )
+            .andExpect(status().isCreated());
+
+        // Validate the database contains
+        List<Medication> medicationList = medicationRepository.findAll();
+        assertThat(medicationList).hasSize(databaseSizeBeforePost + 2);
+        Medication testMedication = medicationList.get(medicationList.size() - 1);
+        assertThat(testMedication.getCode()).isEqualTo(MedicationResourceUtil.DEFAULT_CODE);
+        assertThat(testMedication.getName()).isEqualTo(MedicationResourceUtil.DEFAULT_NAME);
+        assertThat(testMedication.getWeight()).isEqualTo(MedicationResourceUtil.DEFAULT_WEIGHT);
+        assertThat(testMedication.getImage()).isNotNull();
+        assertThat(testMedication.getImageContentType()).isEqualTo(MedicationResourceUtil.DEFAULT_IMAGE_CONTENT_TYPE);
+        assertThat(testMedication.getDrone().getId()).isEqualTo(drone.getId());
     }
 }
