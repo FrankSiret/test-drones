@@ -710,8 +710,10 @@ class DroneResourceIT {
         Medication medication = MedicationResourceUtil.createEntity(em);
         MedicationDTO medicationDTO1 = medicationMapper.toDto(medication);
         medicationDTO1.setId(null);
+        medicationDTO1.setCode(MedicationResourceUtil.DEFAULT_CODE + "1");
         MedicationDTO medicationDTO2 = medicationMapper.toDto(medication);
         medicationDTO2.setId(null);
+        medicationDTO2.setCode(MedicationResourceUtil.DEFAULT_CODE + "2");
         medicationDTO2.setWeight(1000);
 
         List<MedicationDTO> medicationDTOs = List.of(medicationDTO1, medicationDTO2);
@@ -742,8 +744,10 @@ class DroneResourceIT {
         Medication medication = MedicationResourceUtil.createEntity(em);
         MedicationDTO medicationDTO1 = medicationMapper.toDto(medication);
         medicationDTO1.setId(null);
+        medicationDTO1.setCode(MedicationResourceUtil.DEFAULT_CODE + "1");
         MedicationDTO medicationDTO2 = medicationMapper.toDto(medication);
         medicationDTO2.setId(null);
+        medicationDTO2.setCode(MedicationResourceUtil.DEFAULT_CODE + "2");
 
         List<MedicationDTO> medicationDTOs = List.of(medicationDTO1, medicationDTO2);
 
@@ -761,7 +765,7 @@ class DroneResourceIT {
         List<Medication> medicationList = medicationRepository.findAll();
         assertThat(medicationList).hasSize(databaseSizeBeforePost + 2);
         Medication testMedication = medicationList.get(medicationList.size() - 1);
-        assertThat(testMedication.getCode()).isEqualTo(MedicationResourceUtil.DEFAULT_CODE);
+        assertThat(testMedication.getCode()).isEqualTo(MedicationResourceUtil.DEFAULT_CODE + "1");
         assertThat(testMedication.getName()).isEqualTo(MedicationResourceUtil.DEFAULT_NAME);
         assertThat(testMedication.getWeight()).isEqualTo(MedicationResourceUtil.DEFAULT_WEIGHT);
         assertThat(testMedication.getImage()).isNotNull();
