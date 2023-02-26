@@ -62,7 +62,7 @@ class DroneResourceIT {
 
     private static final String ENTITY_API_URL_ID_LOAD = ENTITY_API_URL_ID + "/load";
     private static final String ENTITY_API_URL_ID_BULK_LOAD = ENTITY_API_URL_ID + "/bulk-load";
-    private static final String ENTITY_API_URL_ID_MEDICATION = ENTITY_API_URL_ID + "/medications";
+    private static final String ENTITY_API_URL_ID_MEDICATIONS = ENTITY_API_URL_ID + "/medications";
     private static final String ENTITY_API_URL_AVAILABLE = ENTITY_API_URL + "/available";
     private static final String ENTITY_API_URL_ID_BATTERY = ENTITY_API_URL_ID + "/battery";
     private static Random random = new Random();
@@ -766,5 +766,67 @@ class DroneResourceIT {
         assertThat(testMedication.getImage()).isNotNull();
         assertThat(testMedication.getImageContentType()).isEqualTo(MedicationResourceUtil.DEFAULT_IMAGE_CONTENT_TYPE);
         assertThat(testMedication.getDrone().getId()).isEqualTo(drone.getId());
+    }
+
+    @Test
+    @Transactional
+    void checkingLoadedMedicationItemsNotExisingDroneBadRequest() throws Exception {
+        // Load medication
+        restDroneMockMvc.perform(get(ENTITY_API_URL_ID_MEDICATIONS, Long.MAX_VALUE)).andExpect(status().isBadRequest());
+    }
+
+    /**
+     * Insert 3 Drones and 3 Medications in database
+     * drone1 has 2 Medications (total carried weigth: 300, battery percent: 20)
+     * drone2 has 1 Medications (total carried weigth: 200, battery percent: 40)
+     * drone3 do not Medications (total carried weigth: 0, battery percent: 60)
+     */
+    private List<Drone> insertDronesAndMedications() {
+        Medication medication1 = MedicationResourceUtil.createEntity(em);
+        medication1.setCode(MedicationResourceUtil.DEFAULT_CODE + "1");
+        medication1.setWeight(100);
+        Medication medication2 = MedicationResourceUtil.createEntity(em);
+        medication2.setCode(MedicationResourceUtil.DEFAULT_CODE + "2");
+        medication2.setWeight(200);
+        Medication medication3 = MedicationResourceUtil.createEntity(em);
+        medication3.setCode(MedicationResourceUtil.DEFAULT_CODE + "3");
+        medication3.setWeight(300);
+
+        Drone drone1 = createEntity(em);
+        drone1.setSerialNumber(DEFAULT_SERIAL_NUMBER + "1");
+        drone1.setBatteryCapacity(20);
+        drone1.addMedications(medication1);
+        drone1.addMedications(medication2);
+
+        Drone drone2 = createEntity(em);
+        drone2.setSerialNumber(DEFAULT_SERIAL_NUMBER + "2");
+        drone2.setBatteryCapacity(40);
+        drone2.addMedications(medication3);
+
+        Drone drone3 = createEntity(em);
+        drone3.setSerialNumber(DEFAULT_SERIAL_NUMBER + "3");
+        drone3.setBatteryCapacity(80);
+        drone3.setState(State.DELIVERING);
+
+        droneRepository.saveAndFlush(drone1);
+        droneRepository.saveAndFlush(drone2);
+        droneRepository.saveAndFlush(drone3);
+
+        return List.of(drone1, drone2, drone3);
+    }
+
+    @Test
+    @Transactional
+    void checkingLoadedMedicationItemsByAGivenDroneOK() throws Exception {
+        // Initialize the database
+        List<Drone> drones = insertDronesAndMedications();
+
+        // Load medication
+        restDroneMockMvc
+            .perform(get(ENTITY_API_URL_ID_MEDICATIONS, drones.get(0).getId()))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$", hasSize(2)));
     }
 }
