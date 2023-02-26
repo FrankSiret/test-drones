@@ -319,15 +319,13 @@ public class DroneResource {
     public ResponseEntity<List<DroneDTO>> getAvailableDrone(@RequestParam(required = false) Long weight) {
         log.debug("REST request to get all Drone available for loading this weight: {}", weight);
         Integer battery = 25;
-        List<State> state = List.of(State.IDLE, State.LOADING, State.LOADED, State.DELIVERED);
         List<DroneDTO> result = new ArrayList<>();
         // if weight is specified do a native query
         if (weight != null && weight > 0) {
-            result = droneMapper.toDto(droneRepository.findAllAvailableDroneByWeight(weight, battery, state));
+            result = droneMapper.toDto(droneRepository.findAllAvailableDroneByWeight(weight));
         } else {
             DroneCriteria criteria = new DroneCriteria();
             criteria.batteryCapacity().setGreaterThanOrEqual(battery);
-            criteria.state().setIn(state);
             result = droneQueryService.findByCriteria(criteria);
         }
         return ResponseEntity.ok().body(result);
