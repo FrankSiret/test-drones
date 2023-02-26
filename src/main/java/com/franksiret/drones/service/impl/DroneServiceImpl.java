@@ -48,21 +48,6 @@ public class DroneServiceImpl implements DroneService {
     }
 
     @Override
-    public Optional<DroneDTO> partialUpdate(DroneDTO droneDTO) {
-        log.debug("Request to partially update Drone : {}", droneDTO);
-
-        return droneRepository
-            .findById(droneDTO.getId())
-            .map(existingDrone -> {
-                droneMapper.partialUpdate(existingDrone, droneDTO);
-
-                return existingDrone;
-            })
-            .map(droneRepository::save)
-            .map(droneMapper::toDto);
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public Page<DroneDTO> findAll(Pageable pageable) {
         log.debug("Request to get all Drones");

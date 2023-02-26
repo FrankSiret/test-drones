@@ -27,14 +27,6 @@ public interface DroneService {
     DroneDTO update(DroneDTO droneDTO);
 
     /**
-     * Partially updates a drone.
-     *
-     * @param droneDTO the entity to update partially.
-     * @return the persisted entity.
-     */
-    Optional<DroneDTO> partialUpdate(DroneDTO droneDTO);
-
-    /**
      * Get all the drones.
      *
      * @param pageable the pagination information.
