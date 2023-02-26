@@ -889,4 +889,87 @@ class DroneResourceIT {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.batteryLevel").value(DEFAULT_BATTERY_CAPACITY));
     }
+
+    /**
+     * Prevent the drone to change its state to LOADING if battery is below 25% and state is IDLE
+     */
+    @Test
+    @Transactional
+    void partialUpdateExistingDronePreventUpdates_b20_sIDLE_to_sLOADING() throws Exception {
+        // Initialize the database
+        drone.setBatteryCapacity(20);
+        droneRepository.saveAndFlush(drone);
+
+        int databaseSizeBeforeUpdate = droneRepository.findAll().size();
+
+        // Update the drone
+        Drone updatedDrone = droneRepository.findById(drone.getId()).get();
+        // Disconnect from session so that the updates on updatedDrone are not directly saved in db
+        em.detach(updatedDrone);
+        updatedDrone.state(State.LOADING);
+        DroneUpdateVM droneUpdateVM = droneToUpdateVM(updatedDrone);
+
+        restDroneMockMvc
+            .perform(
+                patch(ENTITY_API_URL_ID, droneUpdateVM.getId())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(droneUpdateVM))
+            )
+            .andExpect(status().isOk())
+            .andExpect(
+                header().string("X-dronesApp-alert", "The drone state cannot be changed to LOADING while its battery decreased below 25%")
+            );
+
+        // Validate the Drone in the database
+        List<Drone> droneList = droneRepository.findAll();
+        assertThat(droneList).hasSize(databaseSizeBeforeUpdate);
+        Drone testDrone = droneList.get(droneList.size() - 1);
+        assertThat(testDrone.getSerialNumber()).isEqualTo(DEFAULT_SERIAL_NUMBER);
+        assertThat(testDrone.getModel()).isEqualTo(DEFAULT_MODEL);
+        assertThat(testDrone.getWeightLimit()).isEqualTo(DEFAULT_WEIGHT_LIMIT);
+        assertThat(testDrone.getBatteryCapacity()).isEqualTo(20);
+        assertThat(testDrone.getState()).isEqualTo(DEFAULT_STATE);
+    }
+
+    /**
+     * Forcibly change the drone state to IDLE if battery is below 25% and state is LOADING
+     */
+    @Test
+    @Transactional
+    void partialUpdateExistingDronePreventUpdates_b100_sLOADING_to_b20() throws Exception {
+        // Initialize the database
+        drone.setState(State.LOADING);
+        droneRepository.saveAndFlush(drone);
+
+        int databaseSizeBeforeUpdate = droneRepository.findAll().size();
+
+        // Update the drone
+        Drone updatedDrone = droneRepository.findById(drone.getId()).get();
+        // Disconnect from session so that the updates on updatedDrone are not directly saved in db
+        em.detach(updatedDrone);
+        updatedDrone.batteryCapacity(20);
+        DroneUpdateVM droneUpdateVM = droneToUpdateVM(updatedDrone);
+
+        restDroneMockMvc
+            .perform(
+                patch(ENTITY_API_URL_ID, droneUpdateVM.getId())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(droneUpdateVM))
+            )
+            .andExpect(status().isOk())
+            .andExpect(
+                header()
+                    .string("X-dronesApp-alert", "The drone state has been forcibly changed to IDLE while its battery decreased below 25%")
+            );
+
+        // Validate the Drone in the database
+        List<Drone> droneList = droneRepository.findAll();
+        assertThat(droneList).hasSize(databaseSizeBeforeUpdate);
+        Drone testDrone = droneList.get(droneList.size() - 1);
+        assertThat(testDrone.getSerialNumber()).isEqualTo(DEFAULT_SERIAL_NUMBER);
+        assertThat(testDrone.getModel()).isEqualTo(DEFAULT_MODEL);
+        assertThat(testDrone.getWeightLimit()).isEqualTo(DEFAULT_WEIGHT_LIMIT);
+        assertThat(testDrone.getBatteryCapacity()).isEqualTo(20);
+        assertThat(testDrone.getState()).isEqualTo(DEFAULT_STATE);
+    }
 }
