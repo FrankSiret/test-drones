@@ -764,7 +764,7 @@ class DroneResourceIT {
         // Validate the database contains
         List<Medication> medicationList = medicationRepository.findAll();
         assertThat(medicationList).hasSize(databaseSizeBeforePost + 2);
-        Medication testMedication = medicationList.get(medicationList.size() - 1);
+        Medication testMedication = medicationList.get(0);
         assertThat(testMedication.getCode()).isEqualTo(MedicationResourceUtil.DEFAULT_CODE + "1");
         assertThat(testMedication.getName()).isEqualTo(MedicationResourceUtil.DEFAULT_NAME);
         assertThat(testMedication.getWeight()).isEqualTo(MedicationResourceUtil.DEFAULT_WEIGHT);
