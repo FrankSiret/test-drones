@@ -2,6 +2,7 @@ package com.franksiret.drones.web.rest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -777,9 +778,9 @@ class DroneResourceIT {
 
     /**
      * Insert 3 Drones and 3 Medications in database
-     * drone1 has 2 Medications (total carried weigth: 300, battery percent: 20)
-     * drone2 has 1 Medications (total carried weigth: 200, battery percent: 40)
-     * drone3 do not Medications (total carried weigth: 0, battery percent: 60)
+     * drone1 has 2 Medications (total carried weigth: 300, battery percent: 20, available to loading: False)
+     * drone2 has 1 Medications (total carried weigth: 200, battery percent: 40, available to loading: True)
+     * drone3 do not Medications (total carried weigth: 0, battery percent: 60, state: DELIVERING, available to loading: False)
      */
     private List<Drone> insertDronesAndMedications() {
         Medication medication1 = MedicationResourceUtil.createEntity(em);
@@ -828,5 +829,50 @@ class DroneResourceIT {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$").isArray())
             .andExpect(jsonPath("$", hasSize(2)));
+    }
+
+    @Test
+    @Transactional
+    void checkingAvailableDronesForLoadingOk() throws Exception {
+        // Initialize the database
+        insertDronesAndMedications();
+
+        // Load medication
+        restDroneMockMvc
+            .perform(get(ENTITY_API_URL_AVAILABLE))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$", hasSize(1)));
+    }
+
+    @Test
+    @Transactional
+    void checkingAvailableDronesForLoadingByWeightIncludedOk() throws Exception {
+        // Initialize the database
+        insertDronesAndMedications();
+
+        // Load medication
+        restDroneMockMvc
+            .perform(get(ENTITY_API_URL_AVAILABLE + "?weight=100"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$", hasSize(1)));
+    }
+
+    @Test
+    @Transactional
+    void checkingAvailableDronesForLoadingByWeightIncludedNonCanCarriedOk() throws Exception {
+        // Initialize the database
+        insertDronesAndMedications();
+
+        // Load medication
+        restDroneMockMvc
+            .perform(get(ENTITY_API_URL_AVAILABLE + "?weight=450"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$").isEmpty());
     }
 }
