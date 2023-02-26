@@ -194,8 +194,14 @@ public class DroneResource {
         }
         Drone result = droneService.saveDroneMedications(drone);
         return ResponseEntity
-            .ok()
-            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
+            .created(new URI("/api/drones/" + result.getId() + "/medications"))
+            .headers(
+                HeaderUtil.createAlert(
+                    applicationName,
+                    String.format("%d new medication items created and loaded successfully in the drone", medicationDTOs.size()),
+                    result.getId().toString()
+                )
+            )
             .body(result);
     }
 
@@ -237,8 +243,14 @@ public class DroneResource {
         drone.addMedications(medication);
         Drone result = droneService.saveDroneMedications(drone);
         return ResponseEntity
-            .ok()
-            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
+            .created(new URI("/api/drones/" + result.getId() + "/medications"))
+            .headers(
+                HeaderUtil.createAlert(
+                    applicationName,
+                    "New medication item created and loaded successfully in the drone",
+                    result.getId().toString()
+                )
+            )
             .body(result);
     }
 
@@ -369,10 +381,10 @@ public class DroneResource {
         if (droneUpdateVM.getBatteryCapacity() != null) droneDTO.setBatteryCapacity(droneUpdateVM.getBatteryCapacity());
         if (droneUpdateVM.getState() != null) droneDTO.setState(droneUpdateVM.getState());
 
-        String message = "Drone has been successfully updated";
+        String message = "The drone has been successfully updated";
 
         if (droneDTO.getBatteryCapacity() < 25 && droneDTO.getState().equals(State.LOADING)) {
-            message = "Drone state has changed to IDLE while its battery decreased below 25%";
+            message = "The drone state has changed to IDLE while its battery decreased below 25%";
             droneDTO.setState(State.IDLE);
         }
 
