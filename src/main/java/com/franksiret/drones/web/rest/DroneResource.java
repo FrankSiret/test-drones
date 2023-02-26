@@ -384,7 +384,7 @@ public class DroneResource {
         String message = "The drone has been successfully updated";
 
         if (droneDTO.getBatteryCapacity() < 25 && droneDTO.getState().equals(State.LOADING)) {
-            message = "The drone state has changed to IDLE while its battery decreased below 25%";
+            message = "The drone state has been forcibly changed to IDLE while its battery decreased below 25%";
             droneDTO.setState(State.IDLE);
         }
 
