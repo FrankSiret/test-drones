@@ -15,6 +15,7 @@ import com.franksiret.drones.service.mapper.DroneMapper;
 import com.franksiret.drones.service.mapper.MedicationMapper;
 import com.franksiret.drones.web.rest.errors.BadRequestAlertException;
 import com.franksiret.drones.web.rest.vm.DroneBatteryVM;
+import com.franksiret.drones.web.rest.vm.DroneUpdateVM;
 import com.franksiret.drones.web.rest.vm.DroneVM;
 import com.franksiret.drones.web.rest.vm.MedicationFormVM;
 import java.io.IOException;
@@ -335,5 +336,48 @@ public class DroneResource {
         DroneBatteryVM droneBatteryVM = new DroneBatteryVM();
         droneBatteryVM.setBatteryLevel(drone.getBatteryCapacity());
         return ResponseEntity.ok().body(droneBatteryVM);
+    }
+
+    /**
+     * {@code PATCH  /drones/:id} : Partial updates battery and state fields of an existing drone, field will ignore if it is null
+     *
+     * @param id the id of the droneDTO to save.
+     * @param droneUpdateVM the value fields to update.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated droneDTO,
+     * or with status {@code 400 (Bad Request)} if the droneDTO is not valid,
+     * or with status {@code 404 (Not Found)} if the droneDTO is not found,
+     * or with status {@code 500 (Internal Server Error)} if the droneDTO couldn't be updated.
+     * @throws URISyntaxException if the Location URI syntax is incorrect.
+     */
+    @PatchMapping(value = "/drones/{id}")
+    public ResponseEntity<DroneDTO> partialUpdateDrone(
+        @PathVariable(value = "id", required = false) final Long id,
+        @NotNull @RequestBody DroneUpdateVM droneUpdateVM
+    ) throws URISyntaxException {
+        log.debug("REST request to partial update Drone partially : {}, {}", id, droneUpdateVM);
+        if (droneUpdateVM.getId() == null) {
+            throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
+        }
+        if (!Objects.equals(id, droneUpdateVM.getId())) {
+            throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
+        }
+
+        DroneDTO droneDTO = droneService
+            .findOne(id)
+            .orElseThrow(() -> new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound"));
+
+        if (droneUpdateVM.getBatteryCapacity() != null) droneDTO.setBatteryCapacity(droneUpdateVM.getBatteryCapacity());
+        if (droneUpdateVM.getState() != null) droneDTO.setState(droneUpdateVM.getState());
+
+        String message = "Drone has been successfully updated";
+
+        if (droneDTO.getBatteryCapacity() < 25 && droneDTO.getState().equals(State.LOADING)) {
+            message = "Drone state has changed to IDLE while its battery decreased below 25%";
+            droneDTO.setState(State.IDLE);
+        }
+
+        DroneDTO result = droneService.update(droneDTO);
+
+        return ResponseEntity.ok().headers(HeaderUtil.createAlert(applicationName, message, result.getId().toString())).body(result);
     }
 }
