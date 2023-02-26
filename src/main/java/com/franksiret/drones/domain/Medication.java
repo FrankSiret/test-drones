@@ -36,7 +36,7 @@ public class Medication implements Serializable {
 
     @NotNull
     @Pattern(regexp = "^[A-Z0-9_]+$")
-    @Column(name = "code", nullable = false)
+    @Column(name = "code", nullable = false, unique = true)
     private String code;
 
     @Lob
