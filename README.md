@@ -6,24 +6,9 @@ This is a practical test, you can find all information and description of the pr
 
 This application was generated using JHipster 7.9.3, you can find documentation and help at [https://www.jhipster.tech/documentation-archive/v7.9.3](https://www.jhipster.tech/documentation-archive/v7.9.3).
 
-## Project Structure
-
-Node is required for generation and recommended for development. `package.json` is always generated for a better development experience with prettier, commit hooks, scripts and so on.
-
-In the project root, JHipster generates configuration files for tools like git, prettier, eslint, husky, and others that are well known and you can find references in the web.
-
-`/src/*` structure follows default Java structure.
-
-- `.yo-rc.json` - Yeoman configuration file
-  JHipster configuration is stored in this file at `generator-jhipster` key. You may find `generator-jhipster-*` for specific blueprints configuration.
-- `.yo-resolve` (optional) - Yeoman conflict resolver
-  Allows to use a specific action when conflicts are found skipping prompts for files that matches a pattern. Each line should match `[pattern] [action]` with pattern been a [Minimatch](https://github.com/isaacs/minimatch#minimatch) pattern and action been one of skip (default if ommited) or force. Lines starting with `#` are considered comments and are ignored.
-- `.jhipster/*.json` - JHipster entity configuration files
-- `/src/main/docker` - Docker configurations for the application and services that the application depends on
-
 # Development
 
-To start your application in the dev profile, run:
+To start the application in the dev profile, run:
 
 ```
 ./mvnw
@@ -35,7 +20,7 @@ To start your application in the dev profile, run:
 
 To build the final jar and optimize the drones application for production, run:
 
-- Keep in mind that for production you need to set up a postgres database.
+- Keep in mind for production you need to set up a postgres database.
 
 ```
 ./mvnw -Pprod clean verify
