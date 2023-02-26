@@ -875,4 +875,18 @@ class DroneResourceIT {
             .andExpect(jsonPath("$").isArray())
             .andExpect(jsonPath("$").isEmpty());
     }
+
+    @Test
+    @Transactional
+    void checkDroneBatteryLevelForGivenDroneOK() throws Exception {
+        // Initialize the database
+        droneRepository.saveAndFlush(drone);
+
+        // Load medication
+        restDroneMockMvc
+            .perform(get(ENTITY_API_URL_ID_BATTERY, drone.getId()))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.batteryLevel").value(DEFAULT_BATTERY_CAPACITY));
+    }
 }
