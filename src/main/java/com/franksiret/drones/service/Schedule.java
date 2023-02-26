@@ -19,13 +19,13 @@ public class Schedule {
         this.droneRepository = droneRepository;
     }
 
-    // every 5 min
-    @Scheduled(fixedDelay = 5 * 60 * 1000)
+    // every minute
+    @Scheduled(fixedDelay = 60 * 1000)
     public void auditDroneBattery() {
         List<Drone> drones = droneRepository.findAll();
         for (Drone drone : drones) {
             log.info(
-                "The drone with id '{}' and serial number '{}' has {}% of battery level",
+                "The drone with id '{}' and serial number '{}' has '{}%' of battery level",
                 drone.getId(),
                 drone.getSerialNumber(),
                 drone.getBatteryCapacity()
