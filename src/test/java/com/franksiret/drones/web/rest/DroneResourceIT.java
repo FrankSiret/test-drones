@@ -764,7 +764,7 @@ class DroneResourceIT {
         // Validate the database contains
         List<Medication> medicationList = medicationRepository.findAll();
         assertThat(medicationList).hasSize(databaseSizeBeforePost + 2);
-        Medication testMedication = medicationList.get(medicationList.size() - 1);
+        Medication testMedication = medicationList.get(0);
         assertThat(testMedication.getCode()).isEqualTo(MedicationResourceUtil.DEFAULT_CODE + "1");
         assertThat(testMedication.getName()).isEqualTo(MedicationResourceUtil.DEFAULT_NAME);
         assertThat(testMedication.getWeight()).isEqualTo(MedicationResourceUtil.DEFAULT_WEIGHT);
@@ -784,7 +784,7 @@ class DroneResourceIT {
      * Insert 3 Drones and 3 Medications in database
      * drone1 has 2 Medications (total carried weigth: 300, battery percent: 20, available to loading: False)
      * drone2 has 1 Medications (total carried weigth: 200, battery percent: 40, available to loading: True)
-     * drone3 do not Medications (total carried weigth: 0, battery percent: 60, state: DELIVERING, available to loading: False)
+     * drone3 do not Medications (total carried weigth: 0, battery percent: 60, available to loading: True)
      */
     private List<Drone> insertDronesAndMedications() {
         Medication medication1 = MedicationResourceUtil.createEntity(em);
@@ -847,7 +847,7 @@ class DroneResourceIT {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$").isArray())
-            .andExpect(jsonPath("$", hasSize(1)));
+            .andExpect(jsonPath("$", hasSize(2)));
     }
 
     @Test
@@ -862,7 +862,7 @@ class DroneResourceIT {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$").isArray())
-            .andExpect(jsonPath("$", hasSize(1)));
+            .andExpect(jsonPath("$", hasSize(2)));
     }
 
     @Test
@@ -877,7 +877,7 @@ class DroneResourceIT {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$").isArray())
-            .andExpect(jsonPath("$").isEmpty());
+            .andExpect(jsonPath("$", hasSize(1)));
     }
 
     @Test

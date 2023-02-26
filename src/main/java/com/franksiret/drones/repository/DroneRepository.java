@@ -16,13 +16,9 @@ public interface DroneRepository extends JpaRepository<Drone, Long>, JpaSpecific
     @Query(
         value = "select d from Drone d " +
         "left join Medication m on d = m.drone " +
-        "where d.batteryCapacity >= :batteryCapacity and d.state in (:state) " +
+        "where d.batteryCapacity >= 25 " +
         "group by d " +
         "having (d.weightLimit - sum(m.weight) >= :weight) or (sum(m.weight) is null and d.weightLimit >= :weight) "
     )
-    List<Drone> findAllAvailableDroneByWeight(
-        @Param("weight") Long weight,
-        @Param("batteryCapacity") Integer battery,
-        @Param("state") List<State> state
-    );
+    List<Drone> findAllAvailableDroneByWeight(@Param("weight") Long weight);
 }
