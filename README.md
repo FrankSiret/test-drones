@@ -1,4 +1,8 @@
-# drones
+# Task Drones
+
+This is a practical test, you can find all information and description of the problem [here](./drones.md)
+
+## Generated code
 
 This application was generated using JHipster 7.9.3, you can find documentation and help at [https://www.jhipster.tech/documentation-archive/v7.9.3](https://www.jhipster.tech/documentation-archive/v7.9.3).
 
@@ -17,7 +21,7 @@ In the project root, JHipster generates configuration files for tools like git, 
 - `.jhipster/*.json` - JHipster entity configuration files
 - `/src/main/docker` - Docker configurations for the application and services that the application depends on
 
-## Development
+# Development
 
 To start your application in the dev profile, run:
 
@@ -25,21 +29,13 @@ To start your application in the dev profile, run:
 ./mvnw
 ```
 
-For further instructions on how to develop with JHipster, have a look at [Using JHipster in development][].
-
-### JHipster Control Center
-
-JHipster Control Center can help you manage and control your application(s). You can start a local control center server (accessible on http://localhost:7419) with:
-
-```
-docker-compose -f src/main/docker/jhipster-control-center.yml up
-```
-
 ## Building for production
 
 ### Packaging as jar
 
 To build the final jar and optimize the drones application for production, run:
+
+- Keep in mind that for production you need to set up a postgres database.
 
 ```
 ./mvnw -Pprod clean verify
@@ -51,16 +47,6 @@ To ensure everything worked, run:
 java -jar target/*.jar
 ```
 
-Refer to [Using JHipster in production][] for more details.
-
-### Packaging as war
-
-To package your application as a war in order to deploy it to an application server, run:
-
-```
-./mvnw -Pprod,war clean verify
-```
-
 ## Testing
 
 To launch your application's tests, run:
@@ -69,61 +55,14 @@ To launch your application's tests, run:
 ./mvnw verify
 ```
 
-For more information, refer to the [Running tests page][].
+## Using Docker to simplify deployment (optional)
 
-### Code quality
+You can use Docker too!
 
-Sonar is used to analyse code quality. You can start a local Sonar server (accessible on http://localhost:9001) with:
-
-```
-docker-compose -f src/main/docker/sonar.yml up -d
-```
-
-Note: we have turned off authentication in [src/main/docker/sonar.yml](src/main/docker/sonar.yml) for out of the box experience while trying out SonarQube, for real use cases turn it back on.
-
-You can run a Sonar analysis with using the [sonar-scanner](https://docs.sonarqube.org/display/SCAN/Analyzing+with+SonarQube+Scanner) or by using the maven plugin.
-
-Then, run a Sonar analysis:
-
-```
-./mvnw -Pprod clean verify sonar:sonar
-```
-
-If you need to re-run the Sonar phase, please be sure to specify at least the `initialize` phase since Sonar properties are loaded from the sonar-project.properties file.
-
-```
-./mvnw initialize sonar:sonar
-```
-
-For more information, refer to the [Code quality page][].
-
-## Using Docker to simplify development (optional)
-
-You can use Docker to improve your JHipster development experience. A number of docker-compose configuration are available in the [src/main/docker](src/main/docker) folder to launch required third party services.
-
-For example, to start a postgresql database in a docker container, run:
-
-```
-docker-compose -f src/main/docker/postgresql.yml up -d
-```
-
-To stop it and remove the container, run:
-
-```
-docker-compose -f src/main/docker/postgresql.yml down
-```
-
-You can also fully dockerize your application and all the services that it depends on.
-To achieve this, first build a docker image of your app by running:
+First build a docker image of the app by running:
 
 ```
 npm run java:docker
-```
-
-Or build a arm64 docker image when using an arm64 processor os like MacOS with M1 processor family running:
-
-```
-npm run java:docker:arm64
 ```
 
 Then run:
@@ -132,21 +71,58 @@ Then run:
 docker-compose -f src/main/docker/app.yml up -d
 ```
 
-When running Docker Desktop on MacOS Big Sur or later, consider enabling experimental `Use the new Virtualization framework` for better processing performance ([disk access performance is worse](https://github.com/docker/roadmap/issues/7)).
+# Practical Task Explanation
 
-For more information refer to [Using Docker and Docker-Compose][], this page also contains information on the docker-compose sub-generator (`jhipster docker-compose`), which is able to generate docker configurations for one or several JHipster applications.
+### Some assumptions I defined.
 
-## Continuous Integration (optional)
+1. All new drone `(POST)` are created in IDLE state and without medication items.
+2. To update a drone `(PATCH)` its only permited to change battery capacity and state.
+3. Image in medication item are persisted to database as two separated field `image-bytes` and `image-content-type`.
+4. The application in secured with Basic Auth, use user=`admin` and password=`admin` to get access.
+5. There is a limit of 10MB to image in medication items.
 
-To configure CI for your project, run the ci-cd sub-generator (`jhipster ci-cd`), this will let you generate configuration files for a number of Continuous Integration systems. Consult the [Setting up Continuous Integration][] page for more information.
+### Endpoints
 
-[jhipster homepage and latest documentation]: https://www.jhipster.tech
-[jhipster 7.9.3 archive]: https://www.jhipster.tech/documentation-archive/v7.9.3
-[using jhipster in development]: https://www.jhipster.tech/documentation-archive/v7.9.3/development/
-[using docker and docker-compose]: https://www.jhipster.tech/documentation-archive/v7.9.3/docker-compose
-[using jhipster in production]: https://www.jhipster.tech/documentation-archive/v7.9.3/production/
-[running tests page]: https://www.jhipster.tech/documentation-archive/v7.9.3/running-tests/
-[code quality page]: https://www.jhipster.tech/documentation-archive/v7.9.3/code-quality/
-[setting up continuous integration]: https://www.jhipster.tech/documentation-archive/v7.9.3/setting-up-ci/
-[node.js]: https://nodejs.org/
-[npm]: https://www.npmjs.com/
+- POST /api/drones : Create new drone
+- GET /api/drones : Get all drones
+- GET /api/drones/count : Count number of drones
+- GET /api/drones/{id} : Get a drone by "id"
+- DELETE /api/drones/{id} : Delete a drone by "id" and its medication items
+- POST /api/drones/{id}/bulk-load : Bulk load medication items to a drone
+- POST /api/drones/{id}/load : Load one medication item to a drone
+- GET /api/drones/{id}/medications : Get all medication items of a drone
+- GET /api/drones/available : Get all available drone for loading
+- GET /api/drones/available?weight=10 : Get all available drone for loading with available weights
+- GET /api/drones/{id}/battery : Get battery level of a drone
+- PATCH /api/drones/{id} : Update battery and state of a drone
+
+For more detail you can check this [postman collection](./Drones.postman_collection.json)
+
+### How to parse image
+
+There are two endpoint that allow to load medication item to a drone, `/bulk-load` and `/load`:
+
+- `BULK-LOAD`: you need to write in the body `(application/json)` an array of medication where each medication might have an `image` and `imageContentType`, the `image` is loaded in `bytes[]` format, for testing propose you can use the next script in python, this paste in your clipboard so you only need to paste `(Ctrl+V)` in the request body, lastly `imageContentType` is the content-type of the image, e.g., `image/jpg`, `image/png`.
+- `LOAD`: its a `(multipart/form-data)` request, use field `image` to load the image and field `medication` to load the medication item entity as `(application/json)`.
+
+```py
+import base64
+import pyperclip
+
+path_image = "./image.jpg"
+
+with open(im, "rb") as image:
+  read = image.read()
+  image_bytes = [str(i) for i in read]
+  pyperclip.copy("[%s]" % ",".join(image_bytes))
+```
+
+- To show the image in the `html` page simply use the following line code:
+
+```html
+<img src="data:[imageContentType];base64,[image]" />
+```
+
+### Periodical task to check all drone battery level
+
+There are set a schedule task that run every minute and save to the log `battery-drone.{date}.log` all asked information.
