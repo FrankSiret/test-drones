@@ -163,7 +163,7 @@ public class DroneResource {
     }
 
     /**
-     * {@code PATCH  /drones/:id/bulk-load} : Loading a drone with a collections of medication items.
+     * {@code POST  /drones/:id/bulk-load} : Loading a drone with a collections of medication items.
      *
      * @param id the id of the droneDTO to load medication items.
      * @param medicationDTOs the list of medication items to load.
@@ -172,7 +172,7 @@ public class DroneResource {
      * or with status {@code 500 (Internal Server Error)} if the droneDTO couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
-    @PatchMapping("/drones/{id}/bulk-load")
+    @PostMapping("/drones/{id}/bulk-load")
     public ResponseEntity<Drone> bulkLoadDrone(
         @PathVariable(value = "id", required = false) final Long id,
         @Valid @RequestBody List<MedicationDTO> medicationDTOs
@@ -200,7 +200,7 @@ public class DroneResource {
     }
 
     /**
-     * {@code PATCH  /drones/:id/load} : Loading a drone with a medication item.
+     * {@code POST  /drones/:id/load} : Loading a drone with a medication item.
      *
      * @param id the id of the droneDTO to load medication items.
      * @param medicationDTO the list of medication items to load.
@@ -210,7 +210,7 @@ public class DroneResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      * @throws IOException
      */
-    @PatchMapping(path = "/drones/{id}/load", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+    @PostMapping(path = "/drones/{id}/load", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
     public ResponseEntity<Drone> loadDrone(
         @PathVariable(value = "id", required = false) final Long id,
         @RequestPart("medication") @Valid MedicationFormVM medicationFormVM,
