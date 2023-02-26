@@ -1,5 +1,6 @@
 package com.franksiret.drones.web.rest.vm;
 
+import com.franksiret.drones.service.dto.MedicationDTO;
 import javax.validation.constraints.*;
 
 /**
@@ -62,5 +63,14 @@ public class MedicationFormVM {
             ", weight=" + getWeight() +
             ", code='" + getCode() + "'" +
             "}";
+    }
+
+    public MedicationDTO toDto() {
+        MedicationDTO dto = new MedicationDTO();
+        dto.setId(id);
+        dto.setName(name);
+        dto.setWeight(weight);
+        dto.setCode(code);
+        return dto;
     }
 }

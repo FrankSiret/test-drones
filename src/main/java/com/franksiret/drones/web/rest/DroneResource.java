@@ -95,7 +95,7 @@ public class DroneResource {
     @PostMapping("/drones")
     public ResponseEntity<DroneDTO> createDrone(@Valid @RequestBody DroneVM droneVM) throws URISyntaxException {
         log.debug("REST request to save Drone : {}", droneVM);
-        DroneDTO droneDTO = droneMapper.toDto(droneVM);
+        DroneDTO droneDTO = droneVM.toDto();
         DroneDTO result = droneService.save(droneDTO);
         return ResponseEntity
             .created(new URI("/api/drones/" + result.getId()))
@@ -230,7 +230,7 @@ public class DroneResource {
             throw new BadRequestAlertException("A new load medication item cannot have an ID", ENTITY_NAME, "idmedicationexists");
         }
         Drone drone = droneRepository.findById(id).get();
-        MedicationDTO medicationDTO = medicationMapper.toDto(medicationFormVM);
+        MedicationDTO medicationDTO = medicationFormVM.toDto();
         if (image != null && !image.isEmpty()) {
             medicationDTO.setImage(image.getBytes());
             medicationDTO.setImageContentType(image.getContentType());

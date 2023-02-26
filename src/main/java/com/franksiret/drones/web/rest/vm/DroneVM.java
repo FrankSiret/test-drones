@@ -1,6 +1,8 @@
 package com.franksiret.drones.web.rest.vm;
 
 import com.franksiret.drones.domain.enumeration.Model;
+import com.franksiret.drones.domain.enumeration.State;
+import com.franksiret.drones.service.dto.DroneDTO;
 import java.io.Serializable;
 import javax.validation.constraints.*;
 
@@ -67,5 +69,15 @@ public class DroneVM implements Serializable {
             ", model='" + getModel() + "'" +
             ", weightLimit=" + getWeightLimit() +
             "}";
+    }
+
+    public DroneDTO toDto() {
+        DroneDTO dto = new DroneDTO();
+        dto.setSerialNumber(serialNumber);
+        dto.setModel(model);
+        dto.setWeightLimit(weightLimit);
+        dto.setBatteryCapacity(batteryCapacity);
+        dto.setState(State.IDLE);
+        return dto;
     }
 }
