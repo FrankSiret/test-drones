@@ -378,14 +378,20 @@ public class DroneResource {
             .findOne(id)
             .orElseThrow(() -> new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound"));
 
+        State currentState = droneDTO.getState();
         if (droneUpdateVM.getBatteryCapacity() != null) droneDTO.setBatteryCapacity(droneUpdateVM.getBatteryCapacity());
         if (droneUpdateVM.getState() != null) droneDTO.setState(droneUpdateVM.getState());
 
         String message = "The drone has been successfully updated";
 
         if (droneDTO.getBatteryCapacity() < 25 && droneDTO.getState().equals(State.LOADING)) {
-            message = "The drone state has been forcibly changed to IDLE while its battery decreased below 25%";
-            droneDTO.setState(State.IDLE);
+            if (currentState.equals(droneDTO.getState())) {
+                message = "The drone state has been forcibly changed to IDLE while its battery decreased below 25%";
+                droneDTO.setState(State.IDLE);
+            } else {
+                message = "The drone state cannot be changed to LOADING while its battery decreased below 25%";
+                droneDTO.setState(currentState);
+            }
         }
 
         DroneDTO result = droneService.update(droneDTO);
