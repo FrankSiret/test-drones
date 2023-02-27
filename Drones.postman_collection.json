@@ -6,7 +6,7 @@
   },
   "item": [
     {
-      "name": "http://localhost:8080/api/drones",
+      "name": "Create a drone",
       "request": {
         "auth": {
           "type": "basic",
@@ -45,7 +45,7 @@
       "response": []
     },
     {
-      "name": "http://localhost:8080/api/drones",
+      "name": "Get all drones",
       "request": {
         "auth": {
           "type": "basic",
@@ -75,7 +75,7 @@
       "response": []
     },
     {
-      "name": "http://localhost:8080/api/drones/count",
+      "name": "Count all drones",
       "request": {
         "auth": {
           "type": "basic",
@@ -105,7 +105,7 @@
       "response": []
     },
     {
-      "name": "http://localhost:8080/api/drones/1001",
+      "name": "Get drone by id",
       "request": {
         "auth": {
           "type": "basic",
@@ -135,7 +135,7 @@
       "response": []
     },
     {
-      "name": "http://localhost:8080/api/drones/1002",
+      "name": "Delete drone by id",
       "request": {
         "auth": {
           "type": "basic",
@@ -165,7 +165,7 @@
       "response": []
     },
     {
-      "name": "http://localhost:8080/api/drones/1003/bulk-load",
+      "name": "Bulk load medication items to a drone",
       "request": {
         "auth": {
           "type": "basic",
@@ -204,7 +204,7 @@
       "response": []
     },
     {
-      "name": "http://localhost:8080/api/drones/1003/load",
+      "name": "Load one medication item to a drone",
       "protocolProfileBehavior": {
         "disabledSystemHeaders": {}
       },
@@ -284,7 +284,7 @@
       "response": []
     },
     {
-      "name": "http://localhost:8080/api/drones/1003/medications",
+      "name": "Get all medication item of a drone",
       "protocolProfileBehavior": {
         "disableBodyPruning": true
       },
@@ -326,7 +326,7 @@
       "response": []
     },
     {
-      "name": "http://localhost:8080/api/drones/available",
+      "name": "Get all available drone for loading",
       "protocolProfileBehavior": {
         "disableBodyPruning": true
       },
@@ -368,7 +368,7 @@
       "response": []
     },
     {
-      "name": "http://localhost:8080/api/drones/available?weight=100",
+      "name": "Get all available drone for loading and weight specification",
       "protocolProfileBehavior": {
         "disableBodyPruning": true
       },
@@ -416,7 +416,7 @@
       "response": []
     },
     {
-      "name": "http://localhost:8080/api/drones/1003/battery",
+      "name": "Get battery level of a drone",
       "request": {
         "auth": {
           "type": "basic",
@@ -446,7 +446,7 @@
       "response": []
     },
     {
-      "name": "http://localhost:8080/api/drones/1003",
+      "name": "Update battery of a drone",
       "request": {
         "auth": {
           "type": "basic",
@@ -485,7 +485,7 @@
       "response": []
     },
     {
-      "name": "http://localhost:8080/api/drones/1003",
+      "name": "Update the state of a drone",
       "request": {
         "auth": {
           "type": "basic",
@@ -520,6 +520,85 @@
           "port": "8080",
           "path": ["api", "drones", "1003"]
         }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete one medication item from a drone",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            {
+              "key": "password",
+              "value": "admin",
+              "type": "string"
+            },
+            {
+              "key": "username",
+              "value": "admin",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/api/drones/1051/medications/1452",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "drones", "1051", "medications", "1452"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete all medication items from a drone",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            {
+              "key": "password",
+              "value": "admin",
+              "type": "string"
+            },
+            {
+              "key": "username",
+              "value": "admin",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/api/drones/1051/medications",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "drones", "1051", "medications"]
+        },
+        "description": "Delete all medication from a drone"
       },
       "response": []
     }
