@@ -83,6 +83,8 @@ docker-compose -f src/main/docker/app.yml up -d
 - `GET /api/drones/available?weight=10` : Get all available drone for loading with available weights
 - `GET /api/drones/{id}/battery` : Get battery level of a drone
 - `PATCH /api/drones/{id}` : Update battery and state of a drone
+- `DELETE /api/drones/{id}/medications` : Delete all medication items from a drone
+- `DELETE /api/drones/{id}/medications/{medicationId}` : Delete a medication item from a drone
 
 For more detail you can check this [postman collection](./Drones.postman_collection.json)
 
