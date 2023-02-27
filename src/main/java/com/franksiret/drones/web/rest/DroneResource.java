@@ -421,7 +421,8 @@ public class DroneResource {
     /**
      * {@code DELETE  /drones/:id/medications/:medicationId} : delete the medications "medicationId" of a drone "id".
      *
-     * @param id the id of the droneDTO to delete.
+     * @param id the id of the droneDTO
+     * @param medicationId the id of the medication item to delete.
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
     @Transactional
