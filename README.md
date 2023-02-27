@@ -64,9 +64,10 @@ docker-compose -f src/main/docker/app.yml up -d
 2. Drone `serial number` allowed only numbers.
 3. All new drone `(POST)` are created in IDLE state and without medication items.
 4. To update a drone `(PATCH)` its only permited to change battery capacity and state.
-5. Image in medication item are persisted to database as two separated field `image-bytes` and `image-content-type`.
-6. The application in secured with Basic Auth, use user=`admin` and password=`admin` to get access.
-7. There is a limit of 10MB to image size in Medication items.
+5. If try to change the drone `state` to `LOADING` while battery is below 25%, this will not throw any Exception, instead the drone `state` will not change. On the other hand, if try to change the drone `battery` below 25% while its state is `LOADING`, then the state will forcibly change to `IDLE` because the battery is not something you can completely control.
+6. Image in medication item are persisted to database as two separated field `image-bytes` and `image-content-type`.
+7. The application in secured with Basic Auth, use user=`admin` and password=`admin` to get access.
+8. There is a limit of 10MB to image size in Medication items.
 
 ### Endpoints
 
