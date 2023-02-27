@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import org.slf4j.Logger;
@@ -264,7 +265,7 @@ public class DroneResource {
         return currentWeight + weightToLoad <= weightLimit;
     }
 
-    private boolean validateMedicationOrThrow(MedicationDTO medicationDTO) {
+    private boolean validateMedicationOrThrow(MedicationDTO medicationDTO) throws BadRequestAlertException {
         if (medicationDTO.getId() != null) {
             throw new BadRequestAlertException("New Medication item cannot have an ID", ENTITY_NAME, "idmedicationexists");
         }
@@ -395,5 +396,55 @@ public class DroneResource {
         DroneDTO result = droneService.update(droneDTO);
 
         return ResponseEntity.ok().headers(HeaderUtil.createAlert(applicationName, message, result.getId().toString())).body(result);
+    }
+
+    /**
+     * {@code DELETE  /drones/:id/medications} : delete all medications of a drone "id".
+     *
+     * @param id the id of the droneDTO to delete its medication items.
+     * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
+     */
+    @Transactional
+    @DeleteMapping("/drones/{id}/medications")
+    public ResponseEntity<Void> deleteAllMedicationDrone(@PathVariable Long id) {
+        log.debug("REST request to delete all Drone medications : {}", id);
+        if (!droneRepository.existsById(id)) {
+            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
+        }
+        medicationRepository.deleteAllByDroneId(id);
+        return ResponseEntity
+            .noContent()
+            .headers(HeaderUtil.createAlert(applicationName, "All medication items on the drone were deleted successfully", id.toString()))
+            .build();
+    }
+
+    /**
+     * {@code DELETE  /drones/:id/medications/:medicationId} : delete the medications "medicationId" of a drone "id".
+     *
+     * @param id the id of the droneDTO to delete.
+     * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
+     */
+    @Transactional
+    @DeleteMapping("/drones/{id}/medications/{medicationId}")
+    public ResponseEntity<Void> deleteMedicationDrone(@PathVariable Long id, @PathVariable Long medicationId) {
+        log.debug("REST request to delete the medication item {} of a Drone : {}", medicationId, id);
+        if (!droneRepository.existsById(id)) {
+            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
+        }
+        Medication medication = medicationRepository
+            .findById(medicationId)
+            .orElseThrow(() -> new BadRequestAlertException("Entity not found", "medication", "idnotfound"));
+        if (medication.getDrone() == null || !medication.getDrone().getId().equals(id)) {
+            throw new BadRequestAlertException(
+                String.format("The medication '%d' is not a load of the drone '%d'", medicationId, id),
+                ENTITY_NAME,
+                "iddismatch"
+            );
+        }
+        medicationRepository.deleteById(medicationId);
+        return ResponseEntity
+            .noContent()
+            .headers(HeaderUtil.createAlert(applicationName, "The medication item on the drone were deleted successfully", id.toString()))
+            .build();
     }
 }
