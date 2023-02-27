@@ -68,18 +68,18 @@ docker-compose -f src/main/docker/app.yml up -d
 
 ### Endpoints
 
-- POST /api/drones : Create new drone
-- GET /api/drones : Get all drones
-- GET /api/drones/count : Count number of drones
-- GET /api/drones/{id} : Get a drone by "id"
-- DELETE /api/drones/{id} : Delete a drone by "id" and its medication items
-- POST /api/drones/{id}/bulk-load : Bulk load medication items to a drone
-- POST /api/drones/{id}/load : Load one medication item to a drone
-- GET /api/drones/{id}/medications : Get all medication items of a drone
-- GET /api/drones/available : Get all available drone for loading
-- GET /api/drones/available?weight=10 : Get all available drone for loading with available weights
-- GET /api/drones/{id}/battery : Get battery level of a drone
-- PATCH /api/drones/{id} : Update battery and state of a drone
+- `POST /api/drones` : Create new drone
+- `GET /api/drones` : Get all drones
+- `GET /api/drones/count` : Count number of drones
+- `GET /api/drones/{id}` : Get a drone by "id"
+- `DELETE /api/drones/{id}` : Delete a drone by "id" and its medication items
+- `POST /api/drones/{id}/bulk-load` : Bulk load medication items to a drone
+- `POST /api/drones/{id}/load` : Load one medication item to a drone
+- `GET /api/drones/{id}/medications` : Get all medication items of a drone
+- `GET /api/drones/available` : Get all available drone for loading
+- `GET /api/drones/available?weight=10` : Get all available drone for loading with available weights
+- `GET /api/drones/{id}/battery` : Get battery level of a drone
+- `PATCH /api/drones/{id}` : Update battery and state of a drone
 
 For more detail you can check this [postman collection](./Drones.postman_collection.json)
 
@@ -87,8 +87,8 @@ For more detail you can check this [postman collection](./Drones.postman_collect
 
 There are two endpoint that allow to load medication item to a drone, `/bulk-load` and `/load`:
 
-- `BULK-LOAD`: you need to write in the body `(application/json)` an array of medication where each medication might have an `image` and `imageContentType`, the `image` is loaded in `bytes[]` format, for testing propose you can use the next script in python, this paste in your clipboard so you only need to paste `(Ctrl+V)` in the request body, lastly `imageContentType` is the content-type of the image, e.g., `image/jpg`, `image/png`.
-- `LOAD`: its a `(multipart/form-data)` request, use field `image` to load the image and field `medication` to load the medication item entity as `(application/json)`.
+- `BULK-LOAD`: you need to write in the body `(application/json)` an array of medication where each medication might have an `image` and `imageContentType`, the `image` is loaded in `bytes[]` format, for testing propose you can use the next script in python to get the bytes array of an image, lastly `imageContentType` is the content-type of the image, e.g., `image/jpg`, `image/png`.
+- `LOAD`: its a `(multipart/form-data)` request, use field `image` to load the image and field `medication` to load the medication item entity as `(application/json)` format.
 
 ```py
 import base64
@@ -99,7 +99,9 @@ path_image = "./image.jpg"
 with open(im, "rb") as image:
   read = image.read()
   image_bytes = [str(i) for i in read]
+  # copy to clipboard the bytes array
   pyperclip.copy("[%s]" % ",".join(image_bytes))
+  # use the paste control (Ctrl+V) to paste the array of byte of the image
 ```
 
 - To show the image in the `html` page simply use the following line code:
