@@ -64,6 +64,7 @@ class DroneResourceIT {
     private static final String ENTITY_API_URL_ID_LOAD = ENTITY_API_URL_ID + "/load";
     private static final String ENTITY_API_URL_ID_BULK_LOAD = ENTITY_API_URL_ID + "/bulk-load";
     private static final String ENTITY_API_URL_ID_MEDICATIONS = ENTITY_API_URL_ID + "/medications";
+    private static final String ENTITY_API_URL_ID_MEDICATIONS_ID = ENTITY_API_URL_ID + "/medications/{medicationId}";
     private static final String ENTITY_API_URL_AVAILABLE = ENTITY_API_URL + "/available";
     private static final String ENTITY_API_URL_ID_BATTERY = ENTITY_API_URL_ID + "/battery";
     private static Random random = new Random();
@@ -975,5 +976,49 @@ class DroneResourceIT {
         assertThat(testDrone.getWeightLimit()).isEqualTo(DEFAULT_WEIGHT_LIMIT);
         assertThat(testDrone.getBatteryCapacity()).isEqualTo(20);
         assertThat(testDrone.getState()).isEqualTo(DEFAULT_STATE);
+    }
+
+    @Test
+    @Transactional
+    void deleteMedicationDrone() throws Exception {
+        // Initialize the database
+        Medication medication = MedicationResourceUtil.createEntity(em);
+        drone.addMedications(medication);
+        droneRepository.saveAndFlush(drone);
+
+        int databaseSizeBeforeDelete = medicationRepository.findAll().size();
+
+        // Delete medication of the drone
+        restDroneMockMvc
+            .perform(delete(ENTITY_API_URL_ID_MEDICATIONS_ID, drone.getId(), medication.getId()).accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNoContent());
+
+        // Validate the database contains one less item
+        List<Medication> medicationList = medicationRepository.findAll();
+        assertThat(medicationList).hasSize(databaseSizeBeforeDelete - 1);
+    }
+
+    @Test
+    @Transactional
+    void deleteAllMedicationDrone() throws Exception {
+        // Initialize the database
+        Medication medication1 = MedicationResourceUtil.createEntity(em);
+        medication1.setCode(MedicationResourceUtil.DEFAULT_CODE + "1");
+        Medication medication2 = MedicationResourceUtil.createEntity(em);
+        medication2.setCode(MedicationResourceUtil.DEFAULT_CODE + "2");
+        drone.addMedications(medication1);
+        drone.addMedications(medication2);
+        droneRepository.saveAndFlush(drone);
+
+        int databaseSizeBeforeDelete = medicationRepository.findAll().size();
+
+        // Delete all medications of the drone
+        restDroneMockMvc
+            .perform(delete(ENTITY_API_URL_ID_MEDICATIONS, drone.getId()).accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNoContent());
+
+        // Validate the database contains two less item
+        List<Medication> medicationList = medicationRepository.findAll();
+        assertThat(medicationList).hasSize(databaseSizeBeforeDelete - 2);
     }
 }
