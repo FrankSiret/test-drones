@@ -60,11 +60,13 @@ docker-compose -f src/main/docker/app.yml up -d
 
 ### Some assumptions I defined.
 
-1. All new drone `(POST)` are created in IDLE state and without medication items.
-2. To update a drone `(PATCH)` its only permited to change battery capacity and state.
-3. Image in medication item are persisted to database as two separated field `image-bytes` and `image-content-type`.
-4. The application in secured with Basic Auth, use user=`admin` and password=`admin` to get access.
-5. There is a limit of 10MB to image in medication items.
+1. Drone and Medication have a primary key `id` integer, use it to retrieve the entity.
+2. Drone `serial number` allowed only numbers.
+3. All new drone `(POST)` are created in IDLE state and without medication items.
+4. To update a drone `(PATCH)` its only permited to change battery capacity and state.
+5. Image in medication item are persisted to database as two separated field `image-bytes` and `image-content-type`.
+6. The application in secured with Basic Auth, use user=`admin` and password=`admin` to get access.
+7. There is a limit of 10MB to image size in Medication items.
 
 ### Endpoints
 
@@ -113,3 +115,7 @@ with open(im, "rb") as image:
 ### Periodical task to check all drone battery level
 
 There are set a schedule task that run every minute and save to the log `battery-drone.{date}.log` all asked information.
+
+### API
+
+You can get the api documentation on `/v3/docs` in json format. There is not swagger-ui predefined, but you can imported in postman collection.
